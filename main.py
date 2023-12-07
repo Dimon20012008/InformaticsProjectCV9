@@ -1,1 +1,0 @@
-print("Hello, everything will be fine)")
