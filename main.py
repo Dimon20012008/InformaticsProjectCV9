@@ -22,11 +22,25 @@ pygame.display.set_caption("pyGame Camera View")
 
 last_point = None
 current_point = None
+
+
+class Sector(pygame.sprite.Sprite):
+    def __init__(self, screen, start_point, end_point):
+        pygame.sprite.Sprite.__init__(self)
+        self.screen = screen
+        self.start_point = start_point
+        self.end_point = end_point
+
+    def update(self):
+        pygame.draw.line(screen, (0, 0, 0), self.start_point, self.end_point, width=1)
+
+Sectors = pygame.sprite.Group()
+
 while True:
     for e in pygame.event.get():
         if e.type == pygame.QUIT:
             sys.exit()
-    screen.blit(img, (0, 0))
+
     view = pygame.surfarray.array3d(img).transpose([1, 0, 2])
 
     img_cv2 = cv2.cvtColor(view, cv2.COLOR_RGB2BGR)
@@ -41,10 +55,11 @@ while True:
         else:
             last_point = current_point
             current_point = ((1 - finger_tip_cords.x) * WIDTH, finger_tip_cords.y * HEIGHT)
-            pygame.draw.line(screen, (0, 0, 0), last_point, current_point, width=1)
+            Sectors.add(Sector(screen, last_point, current_point))
+
+    screen.blit(img, (0, 0))
+    Sectors.update()
     pygame.display.flip()
     pygame.display.update()
 
     img = webcam.get_image()
-
-
