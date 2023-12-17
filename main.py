@@ -20,7 +20,6 @@ img = webcam.get_image()
 
 WIDTH = img.get_width()
 HEIGHT = img.get_height()
-print(WIDTH, HEIGHT)
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("pyGame Camera View")
 
@@ -37,7 +36,7 @@ class Sector(pygame.sprite.Sprite):
         self.end_point = end_point
 
     def update(self):
-        pygame.draw.line(screen, (0, 0, 0), self.start_point, self.end_point, width=1)
+        pygame.draw.line(screen, (0, 255, 0), self.start_point, self.end_point, width=1)
 
 
 Sectors = pygame.sprite.Group()
@@ -48,8 +47,12 @@ pygame.font.init()
 myfont = pygame.font.SysFont("monospace", 15)
 font_color = 255
 frame = 0
+src = "images/circle.png"
+
+contour = np.array([[0, 0]], ndmin=2)
 while True:
     screen.blit(pygame.transform.flip(img, True, False), (0, 0))
+    screen.blit(pygame.image.load(src), (0, 0))
 
     for e in pygame.event.get():
         if e.type == pygame.QUIT:
@@ -58,8 +61,10 @@ while True:
             drawing = True
 
     if not drawing:
-        label = myfont.render("Press any key to play", 1, (font_color, font_color, font_color))
-        screen.blit(label, (100, 100))
+        label = myfont.render("Press any key to play", 1, (font_color, font_color, font_color), (0, 0, 0))
+        text_rect = label.get_rect(center=(WIDTH / 2, HEIGHT / 1.33))
+        screen.blit(label, text_rect)
+
         font_color = int(250 + 5 * math.cos(frame / 20))
     else:
 
@@ -80,24 +85,49 @@ while True:
                         start_point[1] - current_point[1]) ** 2) > 10 and not has_exited_start:
                     frame_exited_start = frame
                     has_exited_start = True
-                    print("out")
                 elif math.sqrt((start_point[0] - current_point[0]) ** 2 + (
-                        start_point[1] - current_point[1]) ** 2) < 5 and has_exited_start and frame - frame_exited_start > 30:
+                        start_point[1] - current_point[
+                    1]) ** 2) < 5 and has_exited_start and frame - frame_exited_start > 30:
+
+                    np_image = cv2.imread(src, cv2.IMREAD_UNCHANGED)
+                    pixels_cords = np.array([[0, 0]], ndmin=2)
+                    for x in range(WIDTH):
+                        for y in range(HEIGHT):
+                            if np_image[y, x, 3] > 0:
+                                pixels_cords = np.append(pixels_cords, [[x, y]], axis=0)
+                    pixels_cords = pixels_cords[1:]
+                    contour = contour[1:]
+                    error = np.array([0, 0])
+
+                    for point in pixels_cords:
+                        error = np.append(error, [np.min(
+                            np.sqrt((contour[:, 0] - point[0]) ** 2 + (contour[:, 1] - point[1]) ** 2))])
+
+                    for countour_point in contour:
+                        error = np.append(error, [np.min(
+                            np.sqrt((pixels_cords[:, 0] - countour_point[0]) ** 2 + (
+                                    pixels_cords[:, 1] - countour_point[1]) ** 2))])
+
+                    error = error[1:]
+                    print(100 * math.e ** (-0.015 * np.average(error)), "%")
+
                     drawing = False
-                    print("in")
                     has_exited_start = False
                     Sectors.empty()
                     last_point = None
                     current_point = None
                     start_point = None
+                    contour = np.array([[0, 0]], ndmin=2)
                     continue
 
                 last_point = current_point
                 current_point = (finger_tip_cords.x * WIDTH, finger_tip_cords.y * HEIGHT)
+                contour = np.append(contour, [current_point], axis=0)
                 Sectors.add(Sector(screen, last_point, current_point))
 
         Sectors.update()
-        pygame.draw.circle(screen, (0, 0, 255), start_point, 2)
+        if start_point is not None:
+            pygame.draw.circle(screen, (0, 0, 255), start_point, 2)
 
     pygame.display.flip()
     pygame.display.update()
