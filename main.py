@@ -8,7 +8,7 @@ import numpy as np
 import mediapipe as mp
 
 # https://stackoverflow.com/questions/29673348/how-to-open-camera-with-pygame-in-windows
-
+sys.stdout.flush()
 
 handsDetector = mp.solutions.hands.Hands()
 pygame.camera.init()
@@ -44,12 +44,14 @@ drawing = False
 has_exited_start = False
 frame_exited_start = 0
 pygame.font.init()
-myfont = pygame.font.SysFont("monospace", 15)
-font_color = 255
+myfont = pygame.font.SysFont("resources/fonts/Montserrat-Black.ttf", 50)
+
 frame = 0
-src = "images/circle.png"
+src = "resources/images_contours/circle.png"
 
 contour = np.array([[0, 0]], ndmin=2)
+
+score = None
 while True:
     screen.blit(pygame.transform.flip(img, True, False), (0, 0))
     screen.blit(pygame.image.load(src), (0, 0))
@@ -61,11 +63,12 @@ while True:
             drawing = True
 
     if not drawing:
-        label = myfont.render("Press any key to play", 1, (font_color, font_color, font_color), (0, 0, 0))
-        text_rect = label.get_rect(center=(WIDTH / 2, HEIGHT / 1.33))
-        screen.blit(label, text_rect)
-
-        font_color = int(250 + 5 * math.cos(frame / 20))
+        screen.blit(pygame.image.load("resources/menu_elements/start_label.png"), (0, 0))
+        if score is not None:
+            font_color_param = int(255 * math.e ** (-0.05 * score))
+            label = myfont.render(f'{score} %', 1, (font_color_param, 255 - font_color_param, 0))
+            text_rect = label.get_rect(center=(WIDTH / 2, HEIGHT / 2))
+            screen.blit(label, text_rect)
     else:
 
         view = pygame.surfarray.array3d(img).transpose([1, 0, 2])
@@ -109,7 +112,7 @@ while True:
                                     pixels_cords[:, 1] - countour_point[1]) ** 2))])
 
                     error = error[1:]
-                    print(100 * math.e ** (-0.015 * np.average(error)), "%")
+                    score = round(100 * math.e ** (-0.015 * np.average(error)), 1)
 
                     drawing = False
                     has_exited_start = False
