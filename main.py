@@ -36,7 +36,7 @@ class Sector(pygame.sprite.Sprite):
         self.end_point = end_point
 
     def update(self):
-        pygame.draw.line(screen, (0, 255, 0), self.start_point, self.end_point, width=1)
+        pygame.draw.line(screen, (0, 255, 0), self.start_point, self.end_point, width=3)
 
 
 Sectors = pygame.sprite.Group()
@@ -69,6 +69,16 @@ while True:
             label = myfont.render(f'{score} %', 1, (font_color_param, 255 - font_color_param, 0))
             text_rect = label.get_rect(center=(WIDTH / 2, HEIGHT / 2))
             screen.blit(label, text_rect)
+
+        view = pygame.surfarray.array3d(img).transpose([1, 0, 2])
+
+        img_cv2 = cv2.cvtColor(view, cv2.COLOR_RGB2BGR)
+        flipped = np.fliplr(img_cv2)
+        flippedRGB = cv2.cvtColor(flipped, cv2.COLOR_BGR2RGB)
+        results = handsDetector.process(flippedRGB)
+        if results.multi_hand_landmarks is not None and results.multi_handedness[0].classification[0].score > 0.7:
+            finger_tip_cords = results.multi_hand_landmarks[0].landmark[8]
+            pygame.draw.circle(screen, (0, 0, 255), (finger_tip_cords.x * WIDTH, finger_tip_cords.y * HEIGHT), 5)
     else:
 
         view = pygame.surfarray.array3d(img).transpose([1, 0, 2])
@@ -130,7 +140,7 @@ while True:
 
         Sectors.update()
         if start_point is not None:
-            pygame.draw.circle(screen, (0, 0, 255), start_point, 2)
+            pygame.draw.circle(screen, (255, 255, 0), start_point, 5)
 
     pygame.display.flip()
     pygame.display.update()
