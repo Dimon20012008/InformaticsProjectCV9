@@ -8,8 +8,6 @@ import numpy as np
 import mediapipe as mp
 
 # https://stackoverflow.com/questions/29673348/how-to-open-camera-with-pygame-in-windows
-sys.stdout.flush()
-
 handsDetector = mp.solutions.hands.Hands()
 pygame.camera.init()
 
@@ -21,7 +19,7 @@ img = webcam.get_image()
 WIDTH = img.get_width()
 HEIGHT = img.get_height()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("pyGame Camera View")
+pygame.display.set_caption("Krivoi Chertila")
 
 last_point = None
 current_point = None
@@ -29,14 +27,19 @@ start_point = None
 
 
 class Sector(pygame.sprite.Sprite):
-    def __init__(self, screen, start_point, end_point):
+    def __init__(self, screen, start_point, end_point, hue):
         pygame.sprite.Sprite.__init__(self)
         self.screen = screen
         self.start_point = start_point
         self.end_point = end_point
+        self.h = hue
 
     def update(self):
-        pygame.draw.line(screen, (0, 255, 0), self.start_point, self.end_point, width=3)
+        h, s, v = self.h, 255, 255
+        blank_img = np.ones((1, 1, 3), np.uint8)
+        blank_img[:] = (h, s, v)
+        r, g, b = cv2.cvtColor(blank_img, cv2.COLOR_HSV2RGB)[0, 0]
+        pygame.draw.line(screen, (r, g, b), self.start_point, self.end_point, width=3)
 
 
 Sectors = pygame.sprite.Group()
@@ -52,6 +55,8 @@ src = "resources/images_contours/circle.png"
 contour = np.array([[0, 0]], ndmin=2)
 
 score = None
+pixels_cords = None
+np_image = cv2.imread(src, cv2.IMREAD_UNCHANGED)
 while True:
     screen.blit(pygame.transform.flip(img, True, False), (0, 0))
     screen.blit(pygame.image.load(src), (0, 0))
@@ -65,8 +70,11 @@ while True:
     if not drawing:
         screen.blit(pygame.image.load("resources/menu_elements/start_label.png"), (0, 0))
         if score is not None:
-            font_color_param = int(255 * math.e ** (-0.05 * score))
-            label = myfont.render(f'{score} %', 1, (font_color_param, 255 - font_color_param, 0))
+            h, s, v = 30 * math.log10(score), 255, 255
+            blank_img = np.ones((1, 1, 3), np.uint8)
+            blank_img[:] = (h, s, v)
+            r, g, b = cv2.cvtColor(blank_img, cv2.COLOR_HSV2RGB)[0, 0]
+            label = myfont.render(f'{score} %', 1, (r, g, b))
             text_rect = label.get_rect(center=(WIDTH / 2, HEIGHT / 2))
             screen.blit(label, text_rect)
 
@@ -78,6 +86,7 @@ while True:
         results = handsDetector.process(flippedRGB)
         if results.multi_hand_landmarks is not None and results.multi_handedness[0].classification[0].score > 0.7:
             finger_tip_cords = results.multi_hand_landmarks[0].landmark[8]
+
             pygame.draw.circle(screen, (0, 0, 255), (finger_tip_cords.x * WIDTH, finger_tip_cords.y * HEIGHT), 5)
     else:
 
@@ -89,6 +98,13 @@ while True:
         results = handsDetector.process(flippedRGB)
         if results.multi_hand_landmarks is not None and results.multi_handedness[0].classification[0].score > 0.7:
             finger_tip_cords = results.multi_hand_landmarks[0].landmark[8]
+            if pixels_cords is None:
+                pixels_cords = np.array([[0, 0]], ndmin=2)
+                for x in range(WIDTH):
+                    for y in range(HEIGHT):
+                        if np_image[y, x, 3] > 0:
+                            pixels_cords = np.append(pixels_cords, [[x, y]], axis=0)
+
             if current_point is None:
                 last_point = (finger_tip_cords.x * WIDTH, finger_tip_cords.y * HEIGHT)
                 current_point = last_point
@@ -102,12 +118,6 @@ while True:
                         start_point[1] - current_point[
                     1]) ** 2) < 5 and has_exited_start and frame - frame_exited_start > 30:
 
-                    np_image = cv2.imread(src, cv2.IMREAD_UNCHANGED)
-                    pixels_cords = np.array([[0, 0]], ndmin=2)
-                    for x in range(WIDTH):
-                        for y in range(HEIGHT):
-                            if np_image[y, x, 3] > 0:
-                                pixels_cords = np.append(pixels_cords, [[x, y]], axis=0)
                     pixels_cords = pixels_cords[1:]
                     contour = contour[1:]
                     error = np.array([0, 0])
@@ -131,12 +141,15 @@ while True:
                     current_point = None
                     start_point = None
                     contour = np.array([[0, 0]], ndmin=2)
+                    pixels_cords = None
                     continue
 
                 last_point = current_point
                 current_point = (finger_tip_cords.x * WIDTH, finger_tip_cords.y * HEIGHT)
                 contour = np.append(contour, [current_point], axis=0)
-                Sectors.add(Sector(screen, last_point, current_point))
+                dist = np.min(np.sqrt((pixels_cords[:, 0] - current_point[0]) ** 2 + (
+                        pixels_cords[:, 1] - current_point[1]) ** 2))
+                Sectors.add(Sector(screen, last_point, current_point, 60))
 
         Sectors.update()
         if start_point is not None:
