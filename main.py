@@ -6,6 +6,10 @@ import sys
 import cv2
 import numpy as np
 import mediapipe as mp
+from os import listdir
+from os.path import isfile, join
+
+
 
 # https://stackoverflow.com/questions/29673348/how-to-open-camera-with-pygame-in-windows
 handsDetector = mp.solutions.hands.Hands()
@@ -88,8 +92,7 @@ while True:
         if results.multi_hand_landmarks is not None and results.multi_handedness[0].classification[0].score > 0.7:
             finger_tip_cords = results.multi_hand_landmarks[0].landmark[8]
             pygame.draw.circle(screen, (0, 0, 255), (finger_tip_cords.x * WIDTH, finger_tip_cords.y * HEIGHT), 5)
-        else:
-            drawing = False
+
     else:
 
         view = pygame.surfarray.array3d(img).transpose([1, 0, 2])
