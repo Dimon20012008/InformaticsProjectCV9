@@ -8,8 +8,7 @@ import numpy as np
 import mediapipe as mp
 from os import listdir
 from os.path import isfile, join
-
-
+from random import randint
 
 # https://stackoverflow.com/questions/29673348/how-to-open-camera-with-pygame-in-windows
 handsDetector = mp.solutions.hands.Hands()
@@ -28,6 +27,7 @@ pygame.display.set_caption("Krivoi Chertila")
 last_point = None
 current_point = None
 start_point = None
+contours_to_display = [f for f in listdir("resources/images_contours") if isfile(join("resources/images_contours", f))]
 
 
 class Sector(pygame.sprite.Sprite):
@@ -54,14 +54,17 @@ pygame.font.init()
 myfont = pygame.font.SysFont("resources/fonts/Montserrat-Black.ttf", 50)
 
 frame = 0
-src = "resources/images_contours/circle.png"
+src = None
 
 contour = np.array([[0, 0]], ndmin=2)
 
 score = None
 pixels_cords = None
-np_image = cv2.imread(src, cv2.IMREAD_UNCHANGED)
+np_image = None
 while True:
+    if src is None:
+        src = f'resources/images_contours/{contours_to_display[randint(0, len(contours_to_display) - 1)]}'
+        np_image = cv2.imread(src, cv2.IMREAD_UNCHANGED)
     screen.blit(pygame.transform.flip(img, True, False), (0, 0))
     screen.blit(pygame.image.load(src), (0, 0))
 
@@ -74,7 +77,7 @@ while True:
     if not drawing:
         screen.blit(pygame.image.load("resources/menu_elements/start_label.png"), (0, 0))
         if score is not None:
-            h, s, v = 30 - 30 * math.cos(math.pi*score / 100), 255, 255
+            h, s, v = 30 - 30 * math.cos(math.pi * score / 100), 255, 255
 
             blank_img = np.ones((1, 1, 3), np.uint8)
             blank_img[:] = (h, s, v)
@@ -147,6 +150,7 @@ while True:
                     start_point = None
                     contour = np.array([[0, 0]], ndmin=2)
                     pixels_cords = None
+                    src = None
                     continue
 
                 last_point = current_point
@@ -155,7 +159,7 @@ while True:
                 dist = np.min(np.sqrt((pixels_cords[:, 0] - current_point[0]) ** 2 + (
                         pixels_cords[:, 1] - current_point[1]) ** 2))
 
-                Sectors.add(Sector(screen, last_point, current_point, 60*math.e**(-0.05*dist)))
+                Sectors.add(Sector(screen, last_point, current_point, 60 * math.e ** (-0.05 * dist)))
 
         Sectors.update()
         if start_point is not None:
