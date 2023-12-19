@@ -70,7 +70,8 @@ while True:
     if not drawing:
         screen.blit(pygame.image.load("resources/menu_elements/start_label.png"), (0, 0))
         if score is not None:
-            h, s, v = 30 * math.log10(score), 255, 255
+            h, s, v = 30 - 30 * math.cos(math.pi*score / 100), 255, 255
+
             blank_img = np.ones((1, 1, 3), np.uint8)
             blank_img[:] = (h, s, v)
             r, g, b = cv2.cvtColor(blank_img, cv2.COLOR_HSV2RGB)[0, 0]
@@ -120,19 +121,19 @@ while True:
 
                     pixels_cords = pixels_cords[1:]
                     contour = contour[1:]
-                    error = np.array([0, 0])
-
+                    error_from_contour = np.array([0, 0])
+                    error_from_path = np.array([0, 0])
                     for point in pixels_cords:
-                        error = np.append(error, [np.min(
-                            np.sqrt((contour[:, 0] - point[0]) ** 2 + (contour[:, 1] - point[1]) ** 2))])
-
+                        error_from_contour = np.append(error_from_contour, [math.e ** (0.05 * np.min(
+                            np.sqrt((contour[:, 0] - point[0]) ** 2 + (contour[:, 1] - point[1]) ** 2)))])
                     for countour_point in contour:
-                        error = np.append(error, [np.min(
+                        error_from_path = np.append(error_from_path, [math.e ** (0.1 * np.min(
                             np.sqrt((pixels_cords[:, 0] - countour_point[0]) ** 2 + (
-                                    pixels_cords[:, 1] - countour_point[1]) ** 2))])
-
-                    error = error[1:]
-                    score = round(100 * math.e ** (-0.015 * np.average(error)), 1)
+                                    pixels_cords[:, 1] - countour_point[1]) ** 2)))])
+                    error_from_contour = error_from_contour[1:]
+                    error_from_path = error_from_path[1:]
+                    score = round(
+                        100 * math.e ** (-0.04 * max(np.average(error_from_contour), np.average(error_from_path))), 1)
 
                     drawing = False
                     has_exited_start = False
