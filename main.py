@@ -87,8 +87,9 @@ while True:
         results = handsDetector.process(flippedRGB)
         if results.multi_hand_landmarks is not None and results.multi_handedness[0].classification[0].score > 0.7:
             finger_tip_cords = results.multi_hand_landmarks[0].landmark[8]
-
             pygame.draw.circle(screen, (0, 0, 255), (finger_tip_cords.x * WIDTH, finger_tip_cords.y * HEIGHT), 5)
+        else:
+            drawing = False
     else:
 
         view = pygame.surfarray.array3d(img).transpose([1, 0, 2])
@@ -150,7 +151,8 @@ while True:
                 contour = np.append(contour, [current_point], axis=0)
                 dist = np.min(np.sqrt((pixels_cords[:, 0] - current_point[0]) ** 2 + (
                         pixels_cords[:, 1] - current_point[1]) ** 2))
-                Sectors.add(Sector(screen, last_point, current_point, 60))
+
+                Sectors.add(Sector(screen, last_point, current_point, 60*math.e**(-0.05*dist)))
 
         Sectors.update()
         if start_point is not None:
