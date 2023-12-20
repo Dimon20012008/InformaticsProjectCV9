@@ -1,5 +1,5 @@
 import math
-
+# just "import pygame" does not work for some reason
 import pygame.camera
 import pygame.image
 import sys
