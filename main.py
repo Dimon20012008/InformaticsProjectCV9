@@ -12,6 +12,7 @@ from random import randint
 
 # https://stackoverflow.com/questions/29673348/how-to-open-camera-with-pygame-in-windows
 handsDetector = mp.solutions.hands.Hands()
+pygame.init()
 pygame.camera.init()
 
 cameras = pygame.camera.list_cameras()
@@ -50,7 +51,7 @@ Sectors = pygame.sprite.Group()
 drawing = False
 has_exited_start = False
 frame_exited_start = 0
-pygame.font.init()
+
 myfont = pygame.font.SysFont("resources/fonts/Montserrat-Black.ttf", 50)
 
 frame = 0
@@ -98,9 +99,8 @@ while True:
 
     else:
 
-        view = pygame.surfarray.array3d(img).transpose([1, 0, 2])
-
-        img_cv2 = cv2.cvtColor(view, cv2.COLOR_RGB2BGR)
+        img_np = pygame.surfarray.array3d(img).transpose([1, 0, 2])
+        img_cv2 = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
         flipped = np.fliplr(img_cv2)
         flippedRGB = cv2.cvtColor(flipped, cv2.COLOR_BGR2RGB)
         results = handsDetector.process(flippedRGB)
@@ -119,12 +119,12 @@ while True:
                 start_point = last_point
             else:
                 if math.sqrt((start_point[0] - current_point[0]) ** 2 + (
-                        start_point[1] - current_point[1]) ** 2) > 10 and not has_exited_start:
+                        start_point[1] - current_point[1]) ** 2) > 12 and not has_exited_start:
                     frame_exited_start = frame
                     has_exited_start = True
                 elif math.sqrt((start_point[0] - current_point[0]) ** 2 + (
                         start_point[1] - current_point[
-                    1]) ** 2) < 5 and has_exited_start and frame - frame_exited_start > 30:
+                    1]) ** 2) < 8 and has_exited_start and frame - frame_exited_start > 30:
 
                     pixels_cords = pixels_cords[1:]
                     contour = contour[1:]
@@ -163,7 +163,7 @@ while True:
 
         Sectors.update()
         if start_point is not None:
-            pygame.draw.circle(screen, (255, 255, 0), start_point, 5)
+            pygame.draw.circle(screen, (255, 255, 0), start_point, 8)
 
     pygame.display.flip()
     pygame.display.update()
