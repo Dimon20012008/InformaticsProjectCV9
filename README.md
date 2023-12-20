@@ -34,18 +34,30 @@
 5. Обведите контур. Чем ближе, тем выше будет результат. Близость можно понять по цвету контура - зелёный это близко,
    красный - очень далеко.
 
-![Bad gameplay](resources/tests/test_contour_color_showcase.mp4)
+![Bad gameplay](resources/tests/test_contour_color_showcase_screenshot.jpg)
 
 6. В конце покажется результат в процентах. Чем он ближе к 100%, тем лучше.
-   
-**скрин с результатом**
 7. Теперь появился новый контур и игру можно начать сначала.
 8. Для выхода из игры можно просто закрыть окно.
 
 ### Примеры с результатами
 
-**вставить примеры. Возможно положить в папку test**
-
+![Path1](resources/tests/test_gameplay1.jpg)
+Пример 1
+![Result1](resources/tests/test_result1.jpg)
+Результат 1
+![Path2](resources/tests/test_gameplay2.jpg)
+Пример 2
+![Result2](resources/tests/test_result2.jpg)
+Результат 2
+![Path3](resources/tests/test_gameplay3.jpg)
+Пример 3
+![Result3](resources/tests/test_result3.jpg)
+Результат 3
+![Path4](resources/tests/test_gameplay4.jpg)
+Пример 4
+![Result4](resources/tests/test_result4.jpg)
+Результат 4
 ### Готовность проекта
 
 Проект завершен. 
