@@ -30,7 +30,7 @@ class Sector(pygame.sprite.Sprite):
 
 
 # source — https://stackoverflow.com/questions/29673348/how-to-open-camera-with-pygame-in-windows
-# initialization of camera
+# initialization of camera. This writes some errors into console, but they do not affect the program
 handsDetector = mp.solutions.hands.Hands()
 pygame.init()
 pygame.camera.init()
